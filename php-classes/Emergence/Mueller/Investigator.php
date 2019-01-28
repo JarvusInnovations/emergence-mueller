@@ -5,8 +5,11 @@ namespace Emergence\Mueller;
 use DB;
 use Cache;
 use Email;
+use ActiveRecord;
 use User;
 use Bookmark;
+use TableNotFoundException;
+use Emergence\People\IUser;
 use Emergence\Comments\Comment;
 use SMTPValidateEmail\Validator as SmtpEmailValidator;
 
@@ -145,21 +148,26 @@ class Investigator
         // scan users
         DB::suspendQueryLogging();
         set_time_limit(0);
-        $report = [];
+        $report = [
+            'investigated' => 0,
+            'indicted' => 0,
+            'purged' => 0,
+            'cleared' => 0
+        ];
 
         if (!empty($_REQUEST['id_min'])) {
-            $usersResult = DB::query('SELECT * FROM `%s` WHERE ID >= %u ORDER BY ID', [User::$tableName, $_REQUEST['id_min'] ]);
+            $usersResult = DB::query('SELECT * FROM people WHERE ID >= %u ORDER BY ID', $_REQUEST['id_min']);
         } elseif (!empty($_REQUEST['id'])) {
-            $usersResult = DB::query('SELECT * FROM `%s` WHERE ID = %u ORDER BY ID', [User::$tableName, $_REQUEST['id']]);
+            $usersResult = DB::query('SELECT * FROM people WHERE ID = %u ORDER BY ID', $_REQUEST['id']);
         } else {
-            $usersResult = DB::query('SELECT * FROM `%s` ORDER BY ID', User::$tableName);
+            $usersResult = DB::query('SELECT * FROM people ORDER BY ID');
         }
 
         while ($userData = $usersResult->fetch_assoc()) {
             $report['investigated']++;
 
 
-            $User = User::instantiateRecord($userData);
+            $User = ActiveRecord::instantiateRecord($userData);
             $userCache = [
                 'diagnostics' => []
             ];
@@ -227,7 +235,7 @@ class Investigator
 
 
             // send result data to optional callback
-            if (is_callable($options['callback'])) {
+            if (!empty($options['callback']) && is_callable($options['callback'])) {
                 call_user_func($options['callback'], $User, [
                     'score' => $score,
                     'flags' => $flags,
@@ -252,7 +260,7 @@ class Investigator
         return $report;
     }
 
-    public static function getUserDomain(User $User, array &$userCache)
+    public static function getUserDomain(IUser $User, array &$userCache)
     {
         if (!isset($userCache['domain'])) {
             $userCache['domain'] = explode('@', $User->Email)[1];
@@ -261,16 +269,20 @@ class Investigator
         return $userCache['domain'];
     }
 
-    public static function getUserComments(User $User, array &$userCache)
+    public static function getUserComments(IUser $User, array &$userCache)
     {
         if (!isset($userCache['comments'])) {
-            $userCache['comments'] = DB::allRecords('SELECT * FROM `%s` WHERE CreatorID = %u', [Comment::$tableName, $User->ID]);
+            try {
+                $userCache['comments'] = DB::allRecords('SELECT * FROM `%s` WHERE CreatorID = %u', [Comment::$tableName, $User->ID]);
+            } catch (TableNotFoundException $e) {
+                $userCache['comments'] = [];
+            }
         }
 
         return $userCache['comments'];
     }
 
-    public static function getUserSessions(User $User, array &$userCache)
+    public static function getUserSessions(IUser $User, array &$userCache)
     {
         if (!isset($userCache['sessions'])) {
             $userCache['sessions'] = DB::allRecords('SELECT * FROM sessions WHERE PersonID = %u', $User->ID);
@@ -279,7 +291,7 @@ class Investigator
         return $userCache['sessions'];
     }
 
-    public static function getUserIps(User $User, array &$userCache)
+    public static function getUserIps(IUser $User, array &$userCache)
     {
         if (!isset($userCache['ips'])) {
             $userCache['ips'] = [];
@@ -291,7 +303,7 @@ class Investigator
         return $userCache['ips'];
     }
 
-    public static function getUserCountries(User $User, array &$userCache)
+    public static function getUserCountries(IUser $User, array &$userCache)
     {
         if (!isset($userCache['countries'])) {
             $ipTable = static::getIpTable();
@@ -337,17 +349,17 @@ class Investigator
         return $ipTable;
     }
 
-    public static function testHasStaff(User $User)
+    public static function testHasStaff(IUser $User)
     {
         return $User->hasAccountLevel('Staff');
     }
 
-    public static function testDomainWhitelist(User $User, array &$userCache)
+    public static function testDomainWhitelist(IUser $User, array &$userCache)
     {
         return in_array(static::getUserDomain($User, $userCache), static::$domainsWhitelist);
     }
 
-    public static function testDomainBlacklist(User $User, array &$userCache)
+    public static function testDomainBlacklist(IUser $User, array &$userCache)
     {
         $domain = static::getUserDomain($User, $userCache);
 
@@ -364,7 +376,7 @@ class Investigator
         return false;
     }
 
-    public static function testDomainToxic(User $User, array &$userCache)
+    public static function testDomainToxic(IUser $User, array &$userCache)
     {
         $domain = static::getUserDomain($User, $userCache);
 
@@ -385,7 +397,7 @@ class Investigator
         // for the "partial" domains list, look for a substring match
         static $toxicPartial;
         if (static::$domainsToxicPartial) {
-            if ($blacklistPatterns === null) {
+            if ($toxicPartial === null) {
                 $toxicPartial = file(static::$domainsToxicPartial, FILE_IGNORE_NEW_LINES);
             }
 
@@ -399,7 +411,7 @@ class Investigator
         return false;
     }
 
-    public static function testDomainDisposable(User $User, array &$userCache)
+    public static function testDomainDisposable(IUser $User, array &$userCache)
     {
         static $disposables;
 
@@ -410,27 +422,27 @@ class Investigator
         return in_array(static::getUserDomain($User, $userCache), $disposables);
     }
 
-    public static function testCharsetForeign(User $User)
+    public static function testCharsetForeign(IUser $User)
     {
         return preg_match('/[^\p{Common}\p{Latin}]/u', "{$User->FirstName} {$User->LastName} {$User->Username}");
     }
 
-    public static function testNameDoubleUpper(User $User)
+    public static function testNameDoubleUpper(IUser $User)
     {
         return preg_match('/[^A-Z][A-Z]{2}$/', $User->FirstName) || preg_match('/[^A-Z][A-Z]{2}$/', $User->LastName);
     }
 
-    public static function testNameRepeated(User $User)
+    public static function testNameRepeated(IUser $User)
     {
         return strpos($User->LastName, $User->FirstName) === 0 || strpos($User->FirstName, $User->LastName) === 0 || substr($User->FirstName, 0, 5) == substr($User->LastName, 0, 5);
     }
 
-    public static function testHasUserField(User $User, array &$userCache, array $options)
+    public static function testHasUserField(IUser $User, array &$userCache, array $options)
     {
         return !empty($User->{$options['userField']});
     }
 
-    public static function testCommentImmediate(User $User, array &$userCache, array $options)
+    public static function testCommentImmediate(IUser $User, array &$userCache, array $options)
     {
         $firstCommentTime = null;
         foreach (static::getUserComments($User, $userCache) as $comment) {
@@ -445,7 +457,7 @@ class Investigator
         return $firstCommentTime && $firstCommentTime - $User->Created < $options['maxSeconds'];
     }
 
-    public static function testCommentForeign(User $User, array &$userCache, array $options)
+    public static function testCommentForeign(IUser $User, array &$userCache, array $options)
     {
         foreach (static::getUserComments($User, $userCache) as $comment) {
             if (preg_match('/[^\p{Common}\p{Latin}]/u', $comment['Message'])) {
@@ -456,7 +468,7 @@ class Investigator
         return false;
     }
 
-#    public static function testCommentLinkCode(User $User, array &$userCache, array $options)
+#    public static function testCommentLinkCode(IUser $User, array &$userCache, array $options)
 #    {
 #        foreach (static::getUserComments($User, $userCache) as $comment) {
 #            // TODO: detect [url and [img and <a href
@@ -465,22 +477,22 @@ class Investigator
 #        return false;
 #    }
 
-    public static function testIpBlacklist(User $User, array &$userCache)
+    public static function testIpBlacklist(IUser $User, array &$userCache)
     {
         return count(array_intersect(static::getUserCountries($User, $userCache), static::$countriesBlacklist)) > 0;
     }
 
-    public static function testIpWhitelist(User $User, array &$userCache)
+    public static function testIpWhitelist(IUser $User, array &$userCache)
     {
         return count(array_intersect(static::getUserCountries($User, $userCache), static::$countriesWhitelist)) > 0;
     }
 
-    public static function testSessionMultiple(User $User, array &$userCache)
+    public static function testSessionMultiple(IUser $User, array &$userCache)
     {
         return count(static::getUserSessions($User, $userCache)) > 1;
     }
 
-    public static function testEmailInvalid(User $User)
+    public static function testEmailInvalid(IUser $User)
     {
         $cacheKey = 'smtp-valid:'.$User->Email;
 
