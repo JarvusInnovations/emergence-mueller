@@ -1,0 +1,4 @@
+[holomapping]
+holosource = "smtp-validate-email"
+root = "src"
+files = "**/*.php"
