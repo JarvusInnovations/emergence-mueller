@@ -248,11 +248,6 @@ class Investigator
                         : null
                 ]);
             }
-
-
-            // flush output after each row
-            ob_flush();
-            flush();
         }
 
         DB::resumeQueryLogging();
