@@ -517,6 +517,9 @@ class Investigator
         static $validator;
         if ($validator === null) {
             $validator = new SmtpEmailValidator(null, Email::getDefaultFrom());
+            if (!empty($_REQUEST['show_smtp_log'])) {
+                $validator->debug = true;
+            }
         }
 
         try {
