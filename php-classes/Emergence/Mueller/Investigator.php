@@ -258,7 +258,9 @@ class Investigator
     public static function getUserDomain(IUser $User, array &$userCache)
     {
         if (!isset($userCache['domain'])) {
-            $userCache['domain'] = explode('@', $User->Email)[1];
+            $userCache['domain'] = $User->Email && count($split = explode('@', $User->Email)) == 2
+                ? $split[1]
+                : null;
         }
 
         return $userCache['domain'];
