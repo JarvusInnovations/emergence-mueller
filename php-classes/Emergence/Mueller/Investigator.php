@@ -114,6 +114,10 @@ class Investigator
         // collect tests
         $tests = [];
         foreach (static::$tests as $testId => $test) {
+            if (!$test) {
+                continue;
+            }
+
             $test['conclusive'] = !empty($test['conclusive']);
             $test['points'] = !empty($test['points']) ? $test['points'] : 100;
             $test['secondary'] = !empty($test['secondary']) ? intval($test['secondary']) : 0;
