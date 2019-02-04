@@ -155,13 +155,25 @@ class Investigator
             'cleared' => 0
         ];
 
+        $params = [];
+        $sql = 'SELECT * FROM people';
+
         if (!empty($_REQUEST['id_min'])) {
-            $usersResult = DB::query('SELECT * FROM people WHERE ID >= %u ORDER BY ID', $_REQUEST['id_min']);
+            $sql .= ' WHERE ID >= %u';
+            $params[] = $_REQUEST['id_min'];
         } elseif (!empty($_REQUEST['id'])) {
-            $usersResult = DB::query('SELECT * FROM people WHERE ID = %u ORDER BY ID', $_REQUEST['id']);
-        } else {
-            $usersResult = DB::query('SELECT * FROM people ORDER BY ID');
+            $sql .= ' WHERE ID = %u';
+            $params[] = $_REQUEST['id'];
         }
+
+        $sql .= ' ORDER BY ID';
+
+        if (!empty($_REQUEST['limit'])) {
+            $sql .= ' LIMIT %u';
+            $params[] = $_REQUEST['limit'];
+        }
+
+        $usersResult = DB::query($sql, $params);
 
         while ($userData = $usersResult->fetch_assoc()) {
             $report['investigated']++;
