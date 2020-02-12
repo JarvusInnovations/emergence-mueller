@@ -55,6 +55,10 @@ class Investigator
             'points' => -100,
             'function' => [__CLASS__, 'testNameNumbered']
         ],
+        'name-matching-shady' => [
+            'points' => -100,
+            'function' => [__CLASS__, 'testNameMatchingShady']
+        ],
         'has-about' => [
             'points' => 100,
             'function' => [__CLASS__, 'testHasUserField'],
@@ -457,6 +461,19 @@ class Investigator
     public static function testNameNumbered(IUser $User)
     {
         return $User->FirstName == $User->Username && preg_match('/\d+/', $User->FirstName);
+    }
+
+    public static function testNameMatchingShady(IUser $User)
+    {
+        if ($User->FirstName != $User->Username) {
+            return false;
+        }
+
+        return (
+            substr($User->Email, -3) == '.ru' // .ru emails are shady
+            || preg_match('/[A-Z]/', $User->Email) // capital letters in email are shady
+            || preg_match('/[A-Z]$/', $User->LastName) // a last name ending in a capital letter is shady
+        );
     }
 
     public static function testHasUserField(IUser $User, array &$userCache, array $options)
