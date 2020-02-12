@@ -51,6 +51,10 @@ class Investigator
             'points' => -100,
             'function' => [__CLASS__, 'testNameRepeated']
         ],
+        'name-numbered' => [
+            'points' => -100,
+            'function' => [__CLASS__, 'testNameNumbered']
+        ],
         'has-about' => [
             'points' => 100,
             'function' => [__CLASS__, 'testHasUserField'],
@@ -448,6 +452,11 @@ class Investigator
     public static function testNameRepeated(IUser $User)
     {
         return strpos($User->LastName, $User->FirstName) === 0 || strpos($User->FirstName, $User->LastName) === 0 || substr($User->FirstName, 0, 5) == substr($User->LastName, 0, 5);
+    }
+
+    public static function testNameNumbered(IUser $User)
+    {
+        return $User->FirstName == $User->Username && preg_match('/\d+/', $User->FirstName);
     }
 
     public static function testHasUserField(IUser $User, array &$userCache, array $options)
