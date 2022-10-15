@@ -84,7 +84,7 @@ class Investigator
             'points' => -100,
             'secondary' => 100,
             'function' => [__CLASS__, 'testCommentImmediate'],
-            'maxSeconds' => 60
+            'maxSeconds' => 600
         ],
         'comment-foreign' => [
             'points' => -100,
