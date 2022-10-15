@@ -351,6 +351,8 @@ class Investigator
                     }
                 }
             }
+
+            $userCache['diagnostics']['countries'] = $userCache['countries'];
         }
 
         return $userCache['countries'];
