@@ -507,13 +507,15 @@ class Investigator
     public static function testCommentImmediate(IUser $User, array &$userCache, array $options)
     {
         $firstCommentTime = null;
-        foreach (static::getUserComments($User, $userCache) as $comment) {
+        $comments = static::getUserComments($User, $userCache);
+        foreach ($comments as $comment) {
             $time = strtotime($comment['Created']);
             if (!$firstCommentTime || $firstCommentTime > $time) {
                 $firstCommentTime = $time;
             }
         }
 
+        $userCache['diagnostics']['comments'] = count($comments);
         $userCache['diagnostics']['time-to-comment'] = $firstCommentTime ? $firstCommentTime - $User->Created : null;
 
         return $firstCommentTime && $firstCommentTime - $User->Created < $options['maxSeconds'];
