@@ -59,16 +59,18 @@ class Investigator
             'points' => -100,
             'function' => [__CLASS__, 'testNameMatchingShady']
         ],
-        'has-about' => [
-            'points' => 100,
-            'function' => [__CLASS__, 'testHasUserField'],
-            'userField' => 'About'
-        ],
-        'has-location' => [
-            'points' => 100,
-            'function' => [__CLASS__, 'testHasUserField'],
-            'userField' => 'Location'
-        ],
+
+        // spammers fill these out commonly now
+        // 'has-about' => [
+        //     'points' => 100,
+        //     'function' => [__CLASS__, 'testHasUserField'],
+        //     'userField' => 'About'
+        // ],
+        // 'has-location' => [
+        //     'points' => 100,
+        //     'function' => [__CLASS__, 'testHasUserField'],
+        //     'userField' => 'Location'
+        // ],
         'comment-immediate' => [
             'points' => -100,
             'secondary' => 100,
