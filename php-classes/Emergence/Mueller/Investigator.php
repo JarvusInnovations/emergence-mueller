@@ -71,6 +71,15 @@ class Investigator
         //     'function' => [__CLASS__, 'testHasUserField'],
         //     'userField' => 'Location'
         // ],
+
+        'about-bbcode' => [
+            'points' => -100,
+            'function' => [__CLASS__, 'testAboutBBCode']
+        ],
+        'about-html' => [
+            'points' => -100,
+            'function' => [__CLASS__, 'testAboutHtml']
+        ],
         'comment-immediate' => [
             'points' => -100,
             'secondary' => 100,
@@ -483,6 +492,16 @@ class Investigator
     public static function testHasUserField(IUser $User, array &$userCache, array $options)
     {
         return !empty($User->{$options['userField']});
+    }
+
+    public static function testAboutBBCode(IUser $User)
+    {
+        return $User->About && strpos($User->About, '[url=') !== false;
+    }
+
+    public static function testAboutHtml(IUser $User)
+    {
+        return $User->About && strpos($User->About, '<a href=') !== false;
     }
 
     public static function testCommentImmediate(IUser $User, array &$userCache, array $options)
