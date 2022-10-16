@@ -89,11 +89,6 @@ class Investigator
             'points' => -100,
             'function' => [__CLASS__, 'testCommentForeign']
         ],
-#        'comment-linkcode' => [
-#            'points' => -100,
-#            'secondary' => 102,
-#            'function' => [__CLASS__, 'testCommentLinkCode']
-#        ],
         'session-multiple' => [
             'points' => 100,
             'secondary' => 200,
@@ -531,15 +526,6 @@ class Investigator
 
         return false;
     }
-
-#    public static function testCommentLinkCode(IUser $User, array &$userCache, array $options)
-#    {
-#        foreach (static::getUserComments($User, $userCache) as $comment) {
-#            // TODO: detect [url and [img and <a href
-#        }
-#
-#        return false;
-#    }
 
     public static function testIpBlacklist(IUser $User, array &$userCache)
     {
