@@ -46,6 +46,8 @@ header('X-Accel-Buffering: no');
     <th>Last Name</th>
     <th>Email</th>
     <th>Twitter</th>
+    <th>Location</th>
+    <th>About</th>
     <?php if (!empty($_REQUEST['show_diagnostics'])): ?><th>Diagnostics</th><?php endif ?>
     <th>Flags</th>
     <th>Purgings</th>
@@ -62,6 +64,8 @@ $report = Emergence\Mueller\Investigator::scanUsers([
             echo '<td class="data">'.$User->LastName.'</td>';
             echo '<td class="data">'.$User->Email.'</td>';
             echo '<td class="data">'.$User->Twitter.'</td>';
+            echo '<td class="data">'.htmlspecialchars($User->Location).'</td>';
+            echo '<td class="data">'.htmlspecialchars($User->About).'</td>';
             if (!empty($_REQUEST['show_diagnostics'])) echo '<td class="diagnostics">'.($result['diagnostics']?var_export(array_filter($result['diagnostics']), true):'').'</td>';
             echo '<td class="flags">'.implode(', ', $result['flags']).'</td>';
             echo '<td class="purgings">'.str_replace('&', '&thinsp;&amp;', http_build_query(array_filter($result['purgings']))).'</td>';
