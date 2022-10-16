@@ -82,13 +82,11 @@ class Investigator
         ],
         'comment-immediate' => [
             'points' => -100,
-            'secondary' => 100,
             'function' => [__CLASS__, 'testCommentImmediate'],
             'maxSeconds' => 600
         ],
         'comment-foreign' => [
             'points' => -100,
-            'secondary' => 101,
             'function' => [__CLASS__, 'testCommentForeign']
         ],
 #        'comment-linkcode' => [
