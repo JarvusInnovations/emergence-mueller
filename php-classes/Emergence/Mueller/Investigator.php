@@ -247,7 +247,7 @@ class Investigator
 
                         DB::nonQuery('INSERT INTO `%s` SELECT * FROM `%s` WHERE CreatorID = %u', [$purgedTableName, $tableName, $User->ID]);
                         DB::nonQuery('DELETE FROM `%s` WHERE CreatorID = %u', [$tableName, $User->ID]);
-                        $purgings[$tableName] += DB::affectedRows();
+                        $purgings[$tableName] = DB::affectedRows();
                     }
 
                     foreach (['people', 'history_people'] as $tableName) {
