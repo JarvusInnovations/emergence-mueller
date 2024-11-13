@@ -186,6 +186,8 @@ class Investigator
         if (!empty($_REQUEST['limit'])) {
             $sql .= ' LIMIT %u';
             $params[] = $_REQUEST['limit'];
+        } else {
+            $sql .= ' LIMIT 100';
         }
 
         $usersResult = DB::query($sql, $params);
