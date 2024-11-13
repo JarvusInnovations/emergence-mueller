@@ -184,7 +184,7 @@ class Investigator
             $params[] = $_REQUEST['id'];
         }
 
-        $sql .= ' ORDER BY ID';
+        $sql .= ' ORDER BY ID DESC';
 
         if (!empty($_REQUEST['limit'])) {
             $sql .= ' LIMIT %u';
