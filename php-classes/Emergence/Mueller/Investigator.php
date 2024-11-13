@@ -176,6 +176,9 @@ class Investigator
         if (!empty($_REQUEST['id_min'])) {
             $sql .= ' WHERE ID >= %u';
             $params[] = $_REQUEST['id_min'];
+        } elseif (!empty($_REQUEST['id_max'])) {
+            $sql .= ' WHERE ID <= %u';
+            $params[] = $_REQUEST['id_max'];
         } elseif (!empty($_REQUEST['id'])) {
             $sql .= ' WHERE ID = %u';
             $params[] = $_REQUEST['id'];
